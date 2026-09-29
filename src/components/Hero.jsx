@@ -212,7 +212,7 @@ export default function Hero() {
               }}
             />
 
-            <div style={{ position: 'relative', width: '100%', maxWidth: '340px', zIndex: 1 }}>
+            <div className="hero-img-wrapper" style={{ position: 'relative', width: '100%', maxWidth: '340px', zIndex: 1 }}>
               <img
                 src={heroImg}
                 alt="Rama Vani — Backend Engineer"
@@ -257,8 +257,15 @@ export default function Hero() {
           .hero-text-col, .hero-img-col {
             width: 100% !important;
           }
+          .hero-img-wrapper {
+            max-width: 260px !important;
+            margin: 0 auto;
+          }
         }
         @media (max-width: 480px) {
+          .hero-img-wrapper {
+            max-width: 210px !important;
+          }
           .hero-cta-group {
             flex-direction: column !important;
             gap: 0.75rem !important;
