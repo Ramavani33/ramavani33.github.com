@@ -18,7 +18,6 @@ export default function Experience() {
         'Architecting and developing core backend API microservices powering a high-throughput mobile application. Responsible for end-to-end API contracts, AWS EC2 cloud hosting, cross-team syncs, and production debugging.',
       highlights: [
         'Built RESTful API endpoints tuned for low latency mobile payloads and high concurrency request handling.',
-        'Provisioned and managed Linux backend environments on AWS EC2 with automated startup scripts and environment configuration.',
         'Led cross-functional collaboration sessions with mobile engineering leads to define payload schemas, error codes, and auth flows.',
         'Active on-call and live production support — diagnosing application stack traces, memory usage, and database query bottlenecks.',
       ],

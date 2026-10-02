@@ -113,7 +113,7 @@ export default function Hero() {
                 maxWidth: '580px',
               }}
             >
-              Specialized in building resilient REST microservices, collaborating across cross-functional engineering teams, and solving complex live production issues under pressure.
+              Specialized in building resilient REST microservices, collaborating across cross-functional engineering teams, and solving complex live production issues.
             </p>
 
             {/* CTA Buttons */}

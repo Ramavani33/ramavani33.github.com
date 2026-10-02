@@ -1,31 +1,28 @@
 import React from 'react';
-import { Compass, Sparkles, Lightbulb, Rocket, BookOpen, Orbit } from 'lucide-react';
+import { Orbit, Sparkles, Heart } from 'lucide-react';
 
 export default function Curiosities() {
   const activities = [
     {
       icon: <Orbit size={24} color="var(--accent-coral)" />,
-      badge: 'EXPLORATION & RESEARCH',
-      title: 'Satellite & Space Systems Research Internship',
+      badge: 'SATELLITE PROGRAM',
+      title: '75 Students Satellite Program (AUSAT)',
       description:
-        'Driven by deep curiosity for high-reliability systems, participated in satellite data processing and telemetry telemetry research. Analyzed raw sensor payload data and mapped signal parsing pipelines.',
-      takeaway: 'Instilled a rigorous mindset toward zero-fault tollerance and data integrity.',
+        'Selected to be part of the college team working on the development of a CubeSat under the 75 Students Satellite Program, organized by Indian Tech Congress Association & TSC.',
     },
     {
-      icon: <Rocket size={24} color="var(--accent-amber)" />,
-      badge: 'SYSTEMS DEEP-DIVE',
-      title: 'Real-Time Telemetry & Hardware Interfacing',
+      icon: <Sparkles size={24} color="var(--accent-cyan)" />,
+      badge: 'EVENT COORDINATION',
+      title: 'Department Coordinator — Daksha',
       description:
-        'Explored low-level system communication protocols, parsing micro-controller signals and transmitting structured packets over network sockets to monitoring dashboards.',
-      takeaway: 'Deepened appreciation for memory efficiency and raw protocol parsing.',
+        'Served as a department coordinator for Daksha, a flagship event conducted by Anurag University.',
     },
     {
-      icon: <Lightbulb size={24} color="var(--accent-cyan)" />,
-      badge: 'COMMUNITY & LEADERSHIP',
-      title: 'Technical Mentorship & Open Engineering Initiatives',
+      icon: <Heart size={24} color="#10b981" />,
+      badge: 'COMMUNITY SERVICE',
+      title: 'Active NSS Member',
       description:
-        'Actively organized peer coding workshops, demystifying RESTful APIs, cloud deployment concepts on AWS, and Git collaborative workflows for junior developers.',
-      takeaway: 'Belief that explaining complex systems clearly builds stronger engineering intuition.',
+        'Actively involved in social service drives, awareness initiatives, and volunteering activities through the National Service Scheme (NSS).',
     },
   ];
 
@@ -35,13 +32,13 @@ export default function Curiosities() {
         <div className="section-tag">04 / Curiosity & Explorations</div>
         <h2 className="section-title">Beyond the Daily Codebase</h2>
         <p className="section-subtitle">
-          Early internships, research pursuits, and technical curiosities framed as exploratory learning journeys.
+          Satellite research, campus leadership, and community service.
         </p>
 
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: '1.5rem',
           }}
         >
@@ -91,26 +88,13 @@ export default function Curiosities() {
                   </span>
                 </div>
 
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 600, color: '#fff', marginBottom: '0.85rem' }}>
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontWeight: 600, color: '#fff', marginBottom: '0.75rem' }}>
                   {act.title}
                 </h3>
 
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 0 }}>
                   {act.description}
                 </p>
-              </div>
-
-              <div
-                style={{
-                  paddingTop: '1rem',
-                  borderTop: '1px dashed var(--border-subtle)',
-                  fontSize: '0.86rem',
-                  color: 'var(--text-muted)',
-                  fontStyle: 'italic',
-                }}
-              >
-                <strong style={{ color: 'var(--text-primary)', fontStyle: 'normal' }}>Key Takeaway: </strong>
-                {act.takeaway}
               </div>
             </div>
           ))}
