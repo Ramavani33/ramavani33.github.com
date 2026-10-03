@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
-import { Mail, Send, Copy, Check, MessageSquare, ExternalLink } from 'lucide-react';
+import { Mail, Send, Copy, Check, MessageSquare, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Contact() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailForm, setEmailForm] = useState({ name: '', email: '', message: '' });
+  const [errors, setErrors] = useState({ name: '', email: '', message: '' });
 
   const emailAddress = 'ramavani33@gmail.com';
   const linkedinUrl = 'https://www.linkedin.com/in/rama-vani-80107a206/';
+
+  const validateEmailFormat = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(String(email).trim());
+  };
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(emailAddress);
@@ -15,15 +22,98 @@ export default function Contact() {
     setTimeout(() => setCopiedEmail(false), 2500);
   };
 
-  const handleEmailSubmit = (e) => {
-    e.preventDefault();
-    if (emailForm.name && emailForm.email && emailForm.message) {
-      setSubmittedEmail(true);
-      setTimeout(() => {
-        setSubmittedEmail(false);
-        setEmailForm({ name: '', email: '', message: '' });
-      }, 4000);
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = { name: '', email: '', message: '' };
+
+    if (!emailForm.name.trim()) {
+      newErrors.name = 'Please enter your name.';
+      valid = false;
     }
+
+    if (!emailForm.email.trim()) {
+      newErrors.email = 'Please enter your email address.';
+      valid = false;
+    } else if (!validateEmailFormat(emailForm.email)) {
+      newErrors.email = 'Please enter a valid email format (e.g. name@example.com).';
+      valid = false;
+    }
+
+    if (!emailForm.message.trim()) {
+      newErrors.message = 'Please enter a message.';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const [activationNotice, setActivationNotice] = useState(false);
+
+  const constructMailtoUrl = () => {
+    const subject = encodeURIComponent(`Portfolio Inquiry from ${emailForm.name}`);
+    const body = encodeURIComponent(
+      `Name: ${emailForm.name}\nSender Email: ${emailForm.email}\n\nMessage:\n${emailForm.message}`
+    );
+    return `mailto:${emailAddress}?subject=${subject}&body=${body}`;
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setActivationNotice(false);
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const mailtoUrl = constructMailtoUrl();
+
+    // 1. Launch mailto directly to guarantee email app prefill
+    window.location.href = mailtoUrl;
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${emailAddress}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          name: emailForm.name,
+          email: emailForm.email,
+          message: emailForm.message,
+          _subject: `New Portfolio Message from ${emailForm.name}`,
+          _replyto: emailForm.email,
+          _honey: emailForm.gotcha || '',
+          _template: 'table',
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (data.success === 'true' || data.success === true) {
+        setSubmittedEmail(true);
+      } else {
+        // FormSubmit returned activation notice or error
+        if (data.message && data.message.includes('Activation')) {
+          setActivationNotice(true);
+        }
+        setSubmittedEmail(true);
+      }
+    } catch (err) {
+      console.warn('FormSubmit network call error:', err);
+      setSubmittedEmail(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResetForm = () => {
+    setSubmittedEmail(false);
+    setEmailForm({ name: '', email: '', message: '' });
+    setErrors({ name: '', email: '', message: '' });
   };
 
   return (
@@ -164,80 +254,179 @@ export default function Contact() {
               {submittedEmail ? (
                 <div
                   style={{
-                    background: 'rgba(56, 239, 125, 0.1)',
+                    background: 'rgba(56, 239, 125, 0.08)',
                     border: '1px solid rgba(56, 239, 125, 0.3)',
-                    padding: '2rem',
+                    padding: '2rem 1.5rem',
                     borderRadius: 'var(--radius-md)',
                     textAlign: 'center',
                     color: '#fff',
                   }}
                 >
-                  <Check size={36} color="var(--accent-cyan)" style={{ marginBottom: '0.5rem' }} />
-                  <h4 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Message Sent!</h4>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    Thank you for reaching out via Email. I'll reply to your inbox soon.
-                  </p>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(56, 239, 125, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                    <Check size={28} color="var(--accent-cyan)" />
+                  </div>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Message Dispatched!</h4>
+                  
+                  {activationNotice ? (
+                    <div style={{ background: 'rgba(255, 171, 0, 0.12)', border: '1px solid rgba(255, 171, 0, 0.35)', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.25rem', textAlign: 'left' }}>
+                      <div style={{ color: 'var(--accent-amber)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <AlertCircle size={16} /> 1-Time Form Activation Required
+                      </div>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                        FormSubmit sent a confirmation link to <strong>{emailAddress}</strong>. Open your Gmail inbox and click <strong>"Activate Form"</strong> once to receive web submissions directly!
+                      </p>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.4rem', lineHeight: 1.4 }}>
+                        Your default mail client has also opened with the prefilled message as a instant fallback.
+                      </p>
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                      Thank you for reaching out! Your message has been prepared for <strong>{emailAddress}</strong>.
+                    </p>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <a
+                      href={constructMailtoUrl()}
+                      style={{
+                        padding: '0.6rem 1.1rem',
+                        borderRadius: 'var(--radius-pill)',
+                        background: 'rgba(255, 94, 98, 0.15)',
+                        border: '1px solid rgba(255, 94, 98, 0.4)',
+                        color: 'var(--accent-coral-light)',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      <Mail size={14} /> Open Email App
+                    </a>
+                    <button
+                      onClick={handleResetForm}
+                      style={{
+                        padding: '0.6rem 1.1rem',
+                        borderRadius: 'var(--radius-pill)',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid var(--border-subtle)',
+                        color: '#fff',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Send Another Message
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <form onSubmit={handleEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <form onSubmit={handleEmailSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {/* Invisible Honeypot Field for Anti-Spam Bot Protection */}
+                  <input
+                    type="text"
+                    name="_honey"
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={emailForm.gotcha || ''}
+                    onChange={(e) => setEmailForm({ ...emailForm, gotcha: e.target.value })}
+                  />
+
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Your Name</label>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Your Name *</label>
                     <input
                       type="text"
-                      required
                       placeholder="e.g. Kitty"
                       value={emailForm.name}
-                      onChange={(e) => setEmailForm({ ...emailForm, name: e.target.value })}
+                      onChange={(e) => {
+                        setEmailForm({ ...emailForm, name: e.target.value });
+                        if (errors.name && e.target.value.trim()) {
+                          setErrors({ ...errors, name: '' });
+                        }
+                      }}
                       style={{
                         width: '100%',
                         padding: '0.85rem 1rem',
                         borderRadius: 'var(--radius-sm)',
                         background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid var(--border-subtle)',
+                        border: errors.name ? '1px solid #ff4d4f' : '1px solid var(--border-subtle)',
                         color: '#fff',
                         fontSize: '0.95rem',
                         outline: 'none',
                       }}
                       className="form-input"
                     />
+                    {errors.name && (
+                      <div style={{ color: '#ff6b6b', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <AlertCircle size={14} />
+                        {errors.name}
+                      </div>
+                    )}
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Your Email</label>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Your Email *</label>
                     <input
                       type="email"
-                      required
                       placeholder="e.g. kitty@company.com"
                       value={emailForm.email}
-                      onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEmailForm({ ...emailForm, email: val });
+                        if (errors.email) {
+                          if (val.trim() && validateEmailFormat(val)) {
+                            setErrors({ ...errors, email: '' });
+                          }
+                        }
+                      }}
+                      onBlur={() => {
+                        if (emailForm.email && !validateEmailFormat(emailForm.email)) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            email: 'Please enter a valid email format (e.g. name@example.com).',
+                          }));
+                        }
+                      }}
                       style={{
                         width: '100%',
                         padding: '0.85rem 1rem',
                         borderRadius: 'var(--radius-sm)',
                         background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid var(--border-subtle)',
+                        border: errors.email ? '1px solid #ff4d4f' : '1px solid var(--border-subtle)',
                         color: '#fff',
                         fontSize: '0.95rem',
                         outline: 'none',
                       }}
                       className="form-input"
                     />
+                    {errors.email && (
+                      <div style={{ color: '#ff6b6b', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <AlertCircle size={14} />
+                        {errors.email}
+                      </div>
+                    )}
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Message</label>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Message *</label>
                     <textarea
-                      required
                       rows={4}
                       placeholder="Tell me about your backend project or opportunity..."
                       value={emailForm.message}
-                      onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
+                      onChange={(e) => {
+                        setEmailForm({ ...emailForm, message: e.target.value });
+                        if (errors.message && e.target.value.trim()) {
+                          setErrors({ ...errors, message: '' });
+                        }
+                      }}
                       style={{
                         width: '100%',
                         padding: '0.85rem 1rem',
                         borderRadius: 'var(--radius-sm)',
                         background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid var(--border-subtle)',
+                        border: errors.message ? '1px solid #ff4d4f' : '1px solid var(--border-subtle)',
                         color: '#fff',
                         fontSize: '0.95rem',
                         outline: 'none',
@@ -245,10 +434,17 @@ export default function Contact() {
                       }}
                       className="form-input"
                     />
+                    {errors.message && (
+                      <div style={{ color: '#ff6b6b', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <AlertCircle size={14} />
+                        {errors.message}
+                      </div>
+                    )}
                   </div>
 
                   <button
                     type="submit"
+                    disabled={isSubmitting}
                     style={{
                       padding: '0.9rem',
                       borderRadius: 'var(--radius-pill)',
@@ -257,17 +453,26 @@ export default function Contact() {
                       fontWeight: 600,
                       fontSize: '0.95rem',
                       border: 'none',
-                      cursor: 'pointer',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.5rem',
                       boxShadow: '0 4px 18px rgba(255, 94, 98, 0.4)',
+                      opacity: isSubmitting ? 0.75 : 1,
                       transition: 'all 0.25s ease',
                     }}
                     className="submit-btn"
                   >
-                    <Send size={16} /> Send via Email
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={16} className="spin-icon" /> Sending Email...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} /> Send via Email
+                      </>
+                    )}
                   </button>
                 </form>
               )}
@@ -319,13 +524,20 @@ export default function Contact() {
           background: rgba(255, 94, 98, 0.15) !important;
           box-shadow: 0 4px 20px rgba(255, 94, 98, 0.2);
         }
-        .submit-btn:hover {
+        .submit-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(255, 94, 98, 0.6) !important;
         }
-        .wa-submit-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5) !important;
+        .spin-icon {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
     </section>
